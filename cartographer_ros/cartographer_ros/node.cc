@@ -40,6 +40,7 @@
 #include "sensor_msgs/PointCloud2.h"
 #include "tf2_eigen/tf2_eigen.h"
 #include "visualization_msgs/MarkerArray.h"
+#include "octomap_msgs/Octomap.h"
 
 namespace cartographer_ros {
 
@@ -100,6 +101,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   service_servers_.push_back(node_handle_.advertiseService(
       kWriteStateServiceName, &Node::HandleWriteState, this));
 
+  service_servers_.push_back(node_handle_.advertiseService(
+      kSubmapCloudQueryServiceName, &Node::HandleSubmapCloudQuery, this));      
+
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
@@ -129,10 +133,20 @@ bool Node::HandleSubmapQuery(
   return map_builder_bridge_.HandleSubmapQuery(request, response);
 }
 
+
+bool Node::HandleSubmapCloudQuery(
+    ::cartographer_ros_msgs::SubmapCloudQuery::Request& request,
+    ::cartographer_ros_msgs::SubmapCloudQuery::Response& response) {
+  carto::common::MutexLocker lock(&mutex_);
+  return map_builder_bridge_.HandleSubmapCloudQuery(request, response);
+}
+
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
 }
+
+
 
 void Node::AddExtrapolator(const int trajectory_id,
                            const TrajectoryOptions& options) {
@@ -241,6 +255,10 @@ void Node::PublishTrajectoryNodeList(
     trajectory_node_list_publisher_.publish(
         map_builder_bridge_.GetTrajectoryNodeList());
   }
+}
+
+void PublishFirstSubmapMarkers(const ::ros::WallTimerEvent& timer_event){
+
 }
 
 void Node::PublishConstraintList(

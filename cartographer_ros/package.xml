@@ -59,6 +59,8 @@
   <depend>tf2_ros</depend>
   <depend>urdf</depend>
   <depend>visualization_msgs</depend>
+  <depend>octomap</depend>
+  <depend>octomap_msgs</depend>
 
   <test_depend>rosunit</test_depend>
 

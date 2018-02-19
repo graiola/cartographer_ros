@@ -31,9 +31,12 @@
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_ros_msgs/SubmapCloudQuery.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "visualization_msgs/MarkerArray.h"
-
+#include "sensor_msgs/PointCloud2.h"
+#include "pcl_ros/point_cloud.h"
+#include "pcl/point_types.h"
 namespace cartographer_ros {
 
 class MapBuilderBridge {
@@ -58,6 +61,11 @@ class MapBuilderBridge {
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
+  
+
+
+  visualization_msgs::MarkerArray GetFirstSubmapMarkers();
+
   void LoadMap(const std::string& map_filename);
   int AddTrajectory(const std::unordered_set<std::string>& expected_sensor_ids,
                     const TrajectoryOptions& trajectory_options);
@@ -69,11 +77,16 @@ class MapBuilderBridge {
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
+  bool HandleSubmapCloudQuery(
+      cartographer_ros_msgs::SubmapCloudQuery::Request& request,
+      cartographer_ros_msgs::SubmapCloudQuery::Response& response);        
+
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
       EXCLUDES(mutex_);
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetConstraintList();
+  pcl::PointCloud<pcl::PointXYZ>::Ptr GetFirstSubmapAsPoints();
 
   SensorBridge* sensor_bridge(int trajectory_id);
 

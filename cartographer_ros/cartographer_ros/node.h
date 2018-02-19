@@ -38,6 +38,7 @@
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
 #include "cartographer_ros_msgs/WriteState.h"
+#include "cartographer_ros_msgs/SubmapCloudQuery.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
 
@@ -116,6 +117,8 @@ class Node {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
   bool HandleWriteState(cartographer_ros_msgs::WriteState::Request& request,
                         cartographer_ros_msgs::WriteState::Response& response);
+  bool HandleSubmapCloudQuery(cartographer_ros_msgs::SubmapCloudQuery::Request& request,
+                        cartographer_ros_msgs::SubmapCloudQuery::Response& response);                        
   // Returns the set of topic names we want to subscribe to.
   std::unordered_set<std::string> ComputeExpectedTopics(
       const TrajectoryOptions& options,
@@ -131,6 +134,7 @@ class Node {
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
+  
   void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,

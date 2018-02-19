@@ -51,6 +51,9 @@ find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 find_package(urdfdom_headers REQUIRED)
+
+find_package(octomap REQUIRED)
+
 if(DEFINED urdfdom_headers_VERSION)
   if(${urdfdom_headers_VERSION} GREATER 0.4.1)
     add_definitions(-DURDFDOM_HEADERS_HAS_SHARED_PTR_DEFS)
@@ -59,6 +62,7 @@ endif()
 
 include_directories(
   ${urdfdom_headers_INCLUDE_DIRS}
+  ${OCTOMAP_INCLUDE_DIRS}
 )
 
 # Override Catkin's GTest configuration to use GMock.
@@ -108,7 +112,7 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
 # Boost
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${Boost_INCLUDE_DIRS}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
 # Catkin
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
