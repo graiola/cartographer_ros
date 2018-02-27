@@ -97,7 +97,10 @@ sensor_msgs::PointCloud2 CreateCloudFromHybridGrid(
         x = hybrid_grid.x_indices(i);
         y = hybrid_grid.y_indices(i);
         z = hybrid_grid.z_indices(i); 
-        Eigen::Vector3f point = /*transform **/ Eigen::Vector3f(x * resolution, y * resolution, z * resolution);
+        //transform the cell indices to an actual voxel center point
+        Eigen::Vector3f point = /*transform **/ Eigen::Vector3f(x * resolution + resolution/2, 
+                                                                y * resolution + resolution/2, 
+                                                                z * resolution + resolution/2);
         *iter_x = point.x();
         *iter_y = point.y();
         *iter_z = point.z();
