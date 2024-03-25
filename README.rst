@@ -25,17 +25,17 @@ Purpose
 and mapping (`SLAM`_) in 2D and 3D across multiple platforms and sensor
 configurations. This project provides Cartographer's ROS integration.
 
-.. _Cartographer: https://github.com/googlecartographer/cartographer
+.. _Cartographer: https://github.com/cartographer-project/cartographer
 .. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
 
 Getting started
 ===============
 
 * Learn to use Cartographer with ROS at `our Read the Docs site`_.
-* Please join the `mailing list`_ and ask questions.
+* You can ask a question by `creating an issue`_.
 
 .. _our Read the Docs site: https://google-cartographer-ros.readthedocs.io
-.. _mailing list: https://groups.google.com/forum/#!forum/google-cartographer
+.. _creating an issue: https://github.com/cartographer-project/cartographer_ros/issues/new?labels=question
 
 Contributing
 ============
@@ -43,12 +43,12 @@ Contributing
 You can find information about contributing to Cartographer's ROS integration
 at `our Contribution page`_.
 
-.. _our Contribution page: https://github.com/googlecartographer/cartographer_ros/blob/master/CONTRIBUTING.md
+.. _our Contribution page: https://github.com/cartographer-project/cartographer_ros/blob/master/CONTRIBUTING.md
 
-.. |build| image:: https://travis-ci.org/googlecartographer/cartographer_ros.svg?branch=master
+.. |build| image:: https://app.travis-ci.com/cartographer-project/cartographer_ros.svg?branch=master
     :alt: Build Status
     :scale: 100%
-    :target: https://travis-ci.org/googlecartographer/cartographer_ros
+    :target: https://app.travis-ci.com/cartographer-project/cartographer_ros
 .. |docs| image:: https://readthedocs.org/projects/google-cartographer-ros/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
@@ -56,5 +56,5 @@ at `our Contribution page`_.
 .. |license| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
      :alt: Apache 2 license.
      :scale: 100%
-     :target: https://github.com/googlecartographer/cartographer_ros/blob/master/LICENSE
+     :target: https://github.com/cartographer-project/cartographer_ros/blob/master/LICENSE
 
