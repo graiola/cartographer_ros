@@ -99,11 +99,13 @@ class MapBuilderBridge {
 
   void HandleSubmapCloudQuery(
       cartographer_ros_msgs::SubmapCloudQuery::Request& request,
-      cartographer_ros_msgs::SubmapCloudQuery::Response& response);        
+      cartographer_ros_msgs::SubmapCloudQuery::Response& response);
 
   std::map<int /* trajectory_id */,
            ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
   GetTrajectoryStates();
+
+  const sensor_msgs::PointCloud2& GetAllSubmapClouds(const bool& high_resolution, const double& min_probability);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unordered_map<int, LocalTrajectoryData> GetLocalTrajectoryData()
@@ -130,7 +132,7 @@ class MapBuilderBridge {
   std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
 
-  ros::Publisher cloud_pub_;
+  sensor_msgs::PointCloud2 map_3d_;
 
   std::unordered_map<std::string /* landmark ID */, int> landmark_to_index_;
 

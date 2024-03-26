@@ -99,10 +99,47 @@ void PushAndResetLineMarker(visualization_msgs::Marker* marker,
   marker->points.clear();
 }
 
-sensor_msgs::PointCloud2 CreateCloudFromHybridGrid(
+pcl::PointCloud<pcl::PointXYZI>::Ptr CreatePCLPointCloudFromHybridGrid(
+    const ::cartographer::mapping::proto::HybridGrid& hybrid_grid,
+    double min_probability) {
+    pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+
+    double resolution = hybrid_grid.resolution();
+
+    for (int i = 0; i < hybrid_grid.values_size(); i++) {
+        int value = hybrid_grid.values(i);
+        if (value > 32767 * min_probability) {
+            int x, y, z;
+            x = hybrid_grid.x_indices(i);
+            y = hybrid_grid.y_indices(i);
+            z = hybrid_grid.z_indices(i);
+
+            // Transform the cell indices to an actual voxel center point
+            Eigen::Vector3f point = Eigen::Vector3f(x * resolution + resolution / 2,
+                                                    y * resolution + resolution / 2,
+                                                    z * resolution + resolution / 2);
+
+            pcl::PointXYZI pcl_point;
+            pcl_point.x = point.x();
+            pcl_point.y = point.y();
+            pcl_point.z = point.z();
+            int prob_int = hybrid_grid.values(i);
+            pcl_point.intensity = prob_int / 32767.0; // 2^15
+
+            pcl_cloud->points.push_back(pcl_point);
+        }
+    }
+
+    pcl_cloud->width = pcl_cloud->points.size();
+    pcl_cloud->height = 1;
+    pcl_cloud->is_dense = true;
+
+    return pcl_cloud;
+}
+
+sensor_msgs::PointCloud2 CreatePointCloud2FromHybridGrid(
   const ::cartographer::mapping::proto::HybridGrid& hybrid_grid,
-  double min_probability,
-  Eigen::Transform<float,3,Eigen::Affine> transform) {
+  double min_probability) {
     ROS_DEBUG("Hybrid grid size %d", hybrid_grid.values_size());
 
     double resolution = hybrid_grid.resolution();
@@ -132,9 +169,9 @@ sensor_msgs::PointCloud2 CreateCloudFromHybridGrid(
         y = hybrid_grid.y_indices(i);
         z = hybrid_grid.z_indices(i); 
         //transform the cell indices to an actual voxel center point
-        Eigen::Vector3f point = /*transform **/ Eigen::Vector3f(x * resolution + resolution/2, 
-                                                                y * resolution + resolution/2, 
-                                                                z * resolution + resolution/2);
+        Eigen::Vector3f point = Eigen::Vector3f(x * resolution + resolution/2,
+                                                y * resolution + resolution/2,
+                                                z * resolution + resolution/2);
         *iter_x = point.x();
         *iter_y = point.y();
         *iter_z = point.z();
@@ -159,8 +196,6 @@ MapBuilderBridge::MapBuilderBridge(
       map_builder_(std::move(map_builder)),
       tf_buffer_(tf_buffer)
 {
-    ::ros::NodeHandle node_handle("");
-    cloud_pub_ = node_handle.advertise<sensor_msgs::PointCloud2>("map_3d", 1);
 }
 
 void MapBuilderBridge::LoadState(const std::string& state_filename,
@@ -231,12 +266,7 @@ void MapBuilderBridge::HandleSubmapCloudQuery(
       cartographer_ros_msgs::SubmapCloudQuery::Request& request,
       cartographer_ros_msgs::SubmapCloudQuery::Response& response){
 
-    auto submapDataMap = map_builder_->pose_graph()->GetAllSubmapData();
-    /*for (const auto& submap_id_data : submapDataMap)
-      {
-      // Publish all!
-      }
-    }*/
+  auto submapDataMap = map_builder_->pose_graph()->GetAllSubmapData();
 
   cartographer::mapping::SubmapId submap_id{request.trajectory_id,
                                             request.submap_index};
@@ -246,14 +276,8 @@ void MapBuilderBridge::HandleSubmapCloudQuery(
     const cartographer::mapping::proto::Submap3D& submap3d = protoSubmapPtr.submap_3d();
     const auto& hybrid_grid = request.high_resolution ? 
                   submap3d.high_resolution_hybrid_grid() : submap3d.low_resolution_hybrid_grid();
-    Eigen::Transform<float,3,Eigen::Affine> transform = 
-              Eigen::Translation3f(submapData.pose.translation().x(), 
-                                   submapData.pose.translation().y(),
-                                   submapData.pose.translation().z()) 
-                                   * Eigen::Quaternion<float>(
-                          submapData.pose.rotation().w(), submapData.pose.rotation().x(),
-                          submapData.pose.rotation().y(), submapData.pose.rotation().z());
-    auto cloud = CreateCloudFromHybridGrid(hybrid_grid, request.min_probability, transform);
+    auto cloud = CreatePointCloud2FromHybridGrid(hybrid_grid, request.min_probability);
+
     cloud.header.frame_id = node_options_.map_frame;
     cloud.header.stamp = ros::Time::now();
      
@@ -261,8 +285,6 @@ void MapBuilderBridge::HandleSubmapCloudQuery(
     response.submap_version = submap3d.num_range_data();
     response.finished = submap3d.finished();
     response.resolution = hybrid_grid.resolution();
-
-    cloud_pub_.publish(cloud);
   }
 }
 
@@ -308,6 +330,37 @@ MapBuilderBridge::GetTrajectoryStates() {
         ::cartographer::mapping::PoseGraphInterface::TrajectoryState::ACTIVE));
   }
   return trajectory_states;
+}
+
+
+const sensor_msgs::PointCloud2 &MapBuilderBridge::GetAllSubmapClouds(const bool& high_resolution, const double& min_probability)
+{
+    pcl::PointCloud<pcl::PointXYZI> merged_cloud;
+    auto submapDataMap = map_builder_->pose_graph()->GetAllSubmapData();
+
+    for (const auto& submap_id_data : submapDataMap) {
+
+      // FIXME is there a way to get the submap after the loop closure?
+      //if (!submap_id_data.data.submap->insertion_finished())
+      //  continue;
+
+      auto protoSubmapPtr = submap_id_data.data.submap->ToProto(true);
+      const cartographer::mapping::proto::Submap3D& submap3d = protoSubmapPtr.submap_3d();
+      const auto& hybrid_grid = high_resolution ?
+                    submap3d.high_resolution_hybrid_grid() : submap3d.low_resolution_hybrid_grid();
+      auto cloud = CreatePCLPointCloudFromHybridGrid(hybrid_grid, min_probability);
+
+      merged_cloud += *cloud;
+
+      pcl::toROSMsg(*merged_cloud.makeShared(), map_3d_);
+
+    }
+
+    map_3d_.header.frame_id = node_options_.map_frame;
+    map_3d_.is_bigendian = false;
+    map_3d_.header.stamp = ros::Time::now();
+
+    return map_3d_;
 }
 
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {

@@ -33,6 +33,7 @@ struct NodeOptions {
   std::string map_frame;
   double lookup_transform_timeout_sec;
   double submap_publish_period_sec;
+  double pointcloud_map_publish_period_sec;
   double pose_publish_period_sec;
   double trajectory_publish_period_sec;
   bool publish_to_tf = true;

@@ -47,6 +47,7 @@ constexpr char kConstraintListTopic[] = "constraint_list";
 constexpr char kSubmapCloudQueryServiceName[] = "submap_cloud_query";
 constexpr double kConstraintPublishPeriodSec = 0.5;
 constexpr double kTopicMismatchCheckDelaySec = 3.0;
+constexpr char kPointCloudMapTopic[] = "map_3d";
 
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;

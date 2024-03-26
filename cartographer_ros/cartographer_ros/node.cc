@@ -120,6 +120,7 @@ Node::Node(
         node_handle_.advertise<::geometry_msgs::PoseStamped>(
             kTrackedPoseTopic, kLatestOnlyPublisherQueueSize);
   }
+
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -142,9 +143,19 @@ Node::Node(
       node_handle_.advertise<sensor_msgs::PointCloud2>(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
+  pointcloud_map_publisher_ =
+      node_handle_.advertise<::sensor_msgs::PointCloud2>(
+          kPointCloudMapTopic, kLatestOnlyPublisherQueueSize);
+
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
+
+  if (node_options_.pointcloud_map_publish_period_sec > 0) {
+    publish_pointcloud_map_data_timer_ = node_handle_.createTimer(
+        ::ros::Duration(node_options_.pointcloud_map_publish_period_sec),
+        &Node::PublishPointCloudMap, this);
+  }
   if (node_options_.pose_publish_period_sec > 0) {
     publish_local_trajectory_data_timer_ = node_handle_.createTimer(
         ::ros::Duration(node_options_.pose_publish_period_sec),
@@ -339,6 +350,13 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
       }
     }
   }
+}
+
+void Node::PublishPointCloudMap(const ::ros::TimerEvent& timer_event) {
+  absl::MutexLock lock(&mutex_);
+    // FIXME
+  auto cloud = map_builder_bridge_.GetAllSubmapClouds(true,0.0);
+  pointcloud_map_publisher_.publish(cloud);
 }
 
 void Node::PublishTrajectoryNodeList(

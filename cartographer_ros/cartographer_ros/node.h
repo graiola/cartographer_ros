@@ -163,6 +163,7 @@ class Node {
   void AddExtrapolator(int trajectory_id, const TrajectoryOptions& options);
   void AddSensorSamplers(int trajectory_id, const TrajectoryOptions& options);
   void PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event);
+  void PublishPointCloudMap(const ::ros::TimerEvent& timer_event);
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishLandmarkPosesList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
@@ -193,6 +194,7 @@ class Node {
   ::ros::Publisher landmark_poses_list_publisher_;
   ::ros::Publisher constraint_list_publisher_;
   ::ros::Publisher tracked_pose_publisher_;
+  ::ros::Publisher pointcloud_map_publisher_;
   // These ros::ServiceServers need to live for the lifetime of the node.
   std::vector<::ros::ServiceServer> service_servers_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
@@ -233,6 +235,8 @@ class Node {
   // simulation time is standing still. This prevents overflowing the transform
   // listener buffer by publishing the same transforms over and over again.
   ::ros::Timer publish_local_trajectory_data_timer_;
+
+  ::ros::Timer publish_pointcloud_map_data_timer_;
 };
 
 }  // namespace cartographer_ros

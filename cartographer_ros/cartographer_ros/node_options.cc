@@ -52,6 +52,10 @@ NodeOptions CreateNodeOptions(
     options.use_pose_extrapolator =
         lua_parameter_dictionary->GetBool("use_pose_extrapolator");
   }
+  if (lua_parameter_dictionary->HasKey("pointcloud_map_publish_period_sec")) {
+      options.pointcloud_map_publish_period_sec =
+          lua_parameter_dictionary->GetDouble("pointcloud_map_publish_period_sec");
+  }
   return options;
 }
 
