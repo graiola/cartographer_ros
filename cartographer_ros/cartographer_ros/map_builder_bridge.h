@@ -105,7 +105,10 @@ class MapBuilderBridge {
            ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
   GetTrajectoryStates();
 
-  const sensor_msgs::PointCloud2& GetAllSubmapClouds(const bool& high_resolution, const double& min_probability);
+  const sensor_msgs::PointCloud2& GetSubmapCloud(const bool& high_resolution,
+                                                 const double& min_probability,
+                                                 const int& trajectory_id = 0,
+                                                 const int& submap_index = 0);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unordered_map<int, LocalTrajectoryData> GetLocalTrajectoryData()

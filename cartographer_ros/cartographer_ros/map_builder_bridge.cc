@@ -333,27 +333,26 @@ MapBuilderBridge::GetTrajectoryStates() {
 }
 
 
-const sensor_msgs::PointCloud2 &MapBuilderBridge::GetAllSubmapClouds(const bool& high_resolution, const double& min_probability)
+const sensor_msgs::PointCloud2& MapBuilderBridge::GetSubmapCloud(const bool& high_resolution, const double& min_probability, const int& trajectory_id, const int& submap_index)
 {
-    pcl::PointCloud<pcl::PointXYZI> merged_cloud;
+
+    map_3d_.data.clear();
+
     auto submapDataMap = map_builder_->pose_graph()->GetAllSubmapData();
 
-    for (const auto& submap_id_data : submapDataMap) {
+    cartographer::mapping::SubmapId submap_id{trajectory_id,
+                                              submap_index};
+    if(submapDataMap.Contains(submap_id)) {
+      const auto& submapData = submapDataMap.at(submap_id);
 
-      // FIXME is there a way to get the submap after the loop closure?
-      //if (!submap_id_data.data.submap->insertion_finished())
-      //  continue;
 
-      auto protoSubmapPtr = submap_id_data.data.submap->ToProto(true);
+      auto protoSubmapPtr = submapData.submap->ToProto(true);
       const cartographer::mapping::proto::Submap3D& submap3d = protoSubmapPtr.submap_3d();
       const auto& hybrid_grid = high_resolution ?
                     submap3d.high_resolution_hybrid_grid() : submap3d.low_resolution_hybrid_grid();
       auto cloud = CreatePCLPointCloudFromHybridGrid(hybrid_grid, min_probability);
 
-      merged_cloud += *cloud;
-
-      pcl::toROSMsg(*merged_cloud.makeShared(), map_3d_);
-
+      pcl::toROSMsg(*cloud, map_3d_);
     }
 
     map_3d_.header.frame_id = node_options_.map_frame;

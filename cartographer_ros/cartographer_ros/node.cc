@@ -354,8 +354,8 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
 
 void Node::PublishPointCloudMap(const ::ros::TimerEvent& timer_event) {
   absl::MutexLock lock(&mutex_);
-    // FIXME
-  auto cloud = map_builder_bridge_.GetAllSubmapClouds(true,0.0);
+    // FIXME export high_resolution, min_probability, trajectory_id, submap_index
+  auto cloud = map_builder_bridge_.GetSubmapCloud(true,0.0,0,0);
   pointcloud_map_publisher_.publish(cloud);
 }
 
